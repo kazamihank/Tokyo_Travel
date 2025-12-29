@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 東京職人與熱血之旅</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Poppins"', '"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            teal: '#008489',
+                            coral: '#FF5A5F',
+                            sand: '#F7F7F7',
+                            dark: '#484848',
+                            blue: '#4285F4'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        /* Custom Styles & Overrides */
+        body {
+            background-color: #ffffff;
+            color: #484848;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Map Container Heights */
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 10;
+        }
+
+        /* Custom Scrollbar */
+        .scrollbar-default::-webkit-scrollbar {
+            width: 6px;
+        }
+        .scrollbar-default::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* Marker Styles - Beautified */
+        .custom-div-icon {
+            background: transparent;
+            border: none;
+        }
+        .marker-pin {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #FF5A5F;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+        .marker-pin:hover {
+            transform: scale(1.1);
+            background: #ff383e;
+        }
+        /* Removed the old ::after pseudo-element that created the hole */
+        
+        .marker-text {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            margin-top: 1px; /* Optical center adjustment */
+        }
+
+        /* Timeline UI */
+        .timeline-container {
+            position: relative;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 23px; /* Center of the 48px width icon area */
+            top: 40px;
+            bottom: -20px;
+            width: 2px;
+            background-color: #e2e8f0;
+            z-index: 0;
+        }
+        .item-card:last-child .timeline-line {
+            display: none;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Accordion Transition */
+        .accordion-wrapper {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.3s ease-out;
+        }
+        .accordion-wrapper.open {
+            grid-template-rows: 1fr;
+        }
+        .accordion-inner {
+            overflow: hidden;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+</head>
+<body class="flex flex-col h-screen overflow-hidden">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 z-50 flex-none h-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+            <div class="flex justify-between items-center h-full">
+                <div class="flex items-center cursor-pointer" onclick="router.navigate('home')">
+                    <svg class="h-8 w-8 text-brand-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="ml-2 font-bold text-xl tracking-tight text-brand-dark">Tokyo<span class="text-brand-coral">2026</span></span>
+                </div>
+                <div class="hidden md:flex space-x-6">
+                    <button onclick="router.navigate('home')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="home">首頁</button>
+                    <button onclick="router.navigate('dashboard')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="dashboard">行程儀表板</button>
+                    <button onclick="router.navigate('special')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="special">特別活動</button>
+                    <button onclick="router.navigate('food')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="food">美食指南</button>
+                    <button onclick="router.navigate('tools')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="tools">交通與工具</button>
+                </div>
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="toggleMobileMenu()" class="text-gray-500 hover:text-brand-coral focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-gray-200 absolute w-full z-50">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <button onclick="router.navigate('home'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">首頁</button>
+                <button onclick="router.navigate('dashboard'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">行程儀表板</button>
+                <button onclick="router.navigate('special'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">特別活動</button>
+                <button onclick="router.navigate('food'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">美食指南</button>
+                <button onclick="router.navigate('tools'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">交通與工具</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main id="app-container" class="flex-grow relative overflow-hidden bg-brand-sand">
+        <!-- Content injected here -->
+    </main>
+
+    <!-- Modal (Hidden Gems) -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col fade-in">
+            <div class="p-4 border-b flex justify-between items-center bg-brand-teal text-white">
+                <h3 class="font-bold text-lg flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    附近隱藏推薦
+                </h3>
+                <button onclick="ui.closeModal()" class="hover:bg-white/20 rounded-full p-1 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="modal-content" class="p-4 overflow-y-auto">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        // --- DATA ---
+        // 使用 Unsplash 穩定圖源 (特定 ID) - 修正版
+        window.appData = {
+            trip: { title: "2026 東京 6 日職人與熱血之旅", startDate: "2026-03-05", days: 6 },
+            days: [
+                {
+                    day: 1,
+                    date: "3/5 (週四)",
+                    title: "抵達與新宿之夜",
+                    theme: "霓虹燈下的居酒屋",
+                    summary: "成田入境後直奔新宿，感受東京的繁忙節奏，晚餐在思出橫丁體驗懷舊風情。",
+                    stats: { walk: "8,500步", cost: "¥12,000" },
+                    center: [35.6909, 139.7005],
+                    zoom: 15,
+                    hiddenGems: [
+                        { name: "新宿黃金街", desc: "擁有200多間微型酒吧的迷宮街區，充滿昭和氛圍。", type: "探險" },
+                        { name: "花園神社", desc: "喧囂新宿中的寧靜之地，主要保佑商業繁榮。", type: "文化" }
+                    ],
+                    items: [
+                        { type: "transit", mode: "Keisei Skyliner", info: "成田機場 -> 日暮里 (40min)", time: "14:30" },
+                        { type: "transit", mode: "JR 山手線", info: "日暮里 -> 新宿", time: "15:20" },
+                        { type: "spot", id: "d1-1", name: "新宿街頭", time: "16:00", lat: 35.6955, lng: 139.7009, img: "https://images.unsplash.com/photo-1534270804882-6b5048b1c1fc?auto=format&fit=crop&w=800&q=80", desc: "Check-in 放行李，仰望巨大的哥吉拉頭像與繁忙街道。" },
+                        { type: "spot", id: "d1-2", name: "新宿 3D 看板周邊", time: "17:30", lat: 35.6923, lng: 139.7012, img: "https://images.unsplash.com/photo-1550948396-9ee8cb851458?auto=format&fit=crop&w=800&q=80", desc: "欣賞裸視 3D 廣告看板上的巨大三花貓與霓虹夜景。" },
+                        { type: "spot", id: "d1-3", name: "思出橫丁", time: "19:00", lat: 35.6930, lng: 139.6995, img: "https://images.unsplash.com/photo-1554797589-7241bb691973?auto=format&fit=crop&w=800&q=80", desc: "充滿煙霧與炭烤香氣的狹窄巷弄，晚餐首選。" }
+                    ]
+                },
+                {
+                    day: 2,
+                    date: "3/6 (週五)",
+                    title: "傳統與未來交織",
+                    theme: "職人精神與數位藝術",
+                    summary: "早上前往築地感受鮮味，下午藏前文青散策，晚上 TeamLab 沉浸式體驗。",
+                    stats: { walk: "18,000步", cost: "¥8,500" },
+                    center: [35.6655, 139.7706],
+                    zoom: 13,
+                    hiddenGems: [
+                        { name: "Kakimori 書寫店", desc: "藏前的知名文具店，可自製專屬筆記本與調色墨水。", type: "購物" },
+                        { name: "築地本願寺", desc: "獨特的印度風格佛教寺廟，內部極具現代感。", type: "文化" }
+                    ],
+                    items: [
+                        { type: "spot", id: "d2-1", name: "築地場外市場", time: "08:30", lat: 35.6655, lng: 139.7706, img: "https://images.unsplash.com/photo-1579619636283-7c980fa2d03b?auto=format&fit=crop&w=800&q=80", desc: "早餐享用玉子燒與海鮮丼。" },
+                        { type: "transit", mode: "Metro 大江戶線", info: "築地市場 -> 藏前", time: "10:30" },
+                        { type: "spot", id: "d2-2", name: "藏前 (Kuramae)", time: "11:00", lat: 35.7034, lng: 139.7913, img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800&q=80", desc: "東京布魯克林，探訪職人咖啡與手作雜貨。" },
+                        { type: "spot", id: "d2-3", name: "淺草寺", time: "14:00", lat: 35.7147, lng: 139.7966, img: "https://images.unsplash.com/photo-1528164344705-47542687000d?auto=format&fit=crop&w=800&q=80", desc: "雷門打卡，參拜觀音。" },
+                        { type: "transit", mode: "百合海鷗號", info: "新橋 -> 豐洲", time: "16:30" },
+                        { type: "spot", id: "d2-4", name: "teamLab Planets", time: "17:30", lat: 35.6492, lng: 139.7897, img: "https://images.unsplash.com/photo-1555523091-c42387140049?auto=format&fit=crop&w=800&q=80", desc: "赤腳走入水中與花朵的沈浸式藝術。" }
+                    ]
+                },
+                {
+                    day: 3,
+                    date: "3/7 (週六)",
+                    title: "熱血賽事與卡丁車",
+                    theme: "東京甩尾與棒球魂",
+                    summary: "體驗街頭卡丁車的快感，接著前往東京巨蛋感受棒球狂熱。",
+                    stats: { walk: "12,000步", cost: "¥15,000" },
+                    center: [35.7056, 139.7514],
+                    zoom: 14,
+                    hiddenGems: [
+                        { name: "野球殿堂博物館", desc: "位於東京巨蛋內，棒球迷必朝聖之地。", type: "展覽" },
+                        { name: "神保町古書街", desc: "鄰近巨蛋，世界最大的古書街，充滿書香氣息。", type: "文化" }
+                    ],
+                    items: [
+                        { type: "spot", id: "d3-1", name: "秋葉原街頭卡丁車", time: "10:00", lat: 35.6983, lng: 139.7731, img: "https://images.unsplash.com/photo-1629208006277-c9135064eb99?auto=format&fit=crop&w=800&q=80", desc: "Cosplay 瑪利歐角色，駕駛卡丁車穿梭東京街頭。" },
+                        { type: "spot", id: "d3-2", name: "秋葉原電器街", time: "12:30", lat: 35.6997, lng: 139.7713, img: "https://images.unsplash.com/photo-1533038590840-1cde6e668a91?auto=format&fit=crop&w=800&q=80", desc: "御宅族聖地巡禮，購買模型與電器。" },
+                        { type: "transit", mode: "JR 總武線", info: "秋葉原 -> 水道橋", time: "14:30" },
+                        { type: "spot", id: "d3-3", name: "東京巨蛋 (WBC)", time: "15:00", lat: 35.7056, lng: 139.7514, img: "https://images.unsplash.com/photo-1614946397444-4f0164b73255?auto=format&fit=crop&w=800&q=80", desc: "觀賞熱身賽或參觀周邊，感受日本棒球最高殿堂氛圍。" },
+                        { type: "spot", id: "d3-4", name: "LaQua Spa", time: "19:00", lat: 35.7065, lng: 139.7530, img: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80", desc: "在巨蛋旁的天然溫泉放鬆身心。" }
+                    ]
+                },
+                {
+                    day: 4,
+                    date: "3/8 (週日)",
+                    title: "潮流與綠意",
+                    theme: "澀谷 Shibuya Sky",
+                    summary: "探索東京最新的展望台，漫步在明治神宮的森林中。",
+                    stats: { walk: "22,000步", cost: "¥7,000" },
+                    center: [35.6580, 139.7016],
+                    zoom: 14,
+                    hiddenGems: [
+                        { name: "代代木八幡宮", desc: "求良緣與事業運的能量景點，還有可愛的貓咪。", type: "文化" },
+                        { name: "Fuglen Tokyo", desc: "來自挪威的知名咖啡店，就在代代木公園旁。", type: "美食" }
+                    ],
+                    items: [
+                        { type: "spot", id: "d4-1", name: "明治神宮", time: "09:00", lat: 35.6763, lng: 139.6993, img: "https://images.unsplash.com/photo-1624602985160-c3d317046e7f?auto=format&fit=crop&w=800&q=80", desc: "市中心的森林，享受芬多精。" },
+                        { type: "spot", id: "d4-2", name: "原宿竹下通", time: "11:30", lat: 35.6716, lng: 139.7032, img: "https://images.unsplash.com/photo-1570457631326-8797f6c24597?auto=format&fit=crop&w=800&q=80", desc: "體驗日本年輕人次文化與可麗餅。" },
+                        { type: "transit", mode: "Walk", info: "貓街散步 (Cat Street)", time: "14:00" },
+                        { type: "spot", id: "d4-3", name: "SHIBUYA SKY", time: "16:30", lat: 35.6591, lng: 139.7006, img: "https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?auto=format&fit=crop&w=800&q=80", desc: "在 229 公尺高空俯瞰澀谷十字路口與夕陽。" },
+                        { type: "spot", id: "d4-4", name: "宮下公園", time: "19:00", lat: 35.6620, lng: 139.7018, img: "https://images.unsplash.com/photo-1580910051053-480e6e171b93?auto=format&fit=crop&w=800&q=80", desc: "屋頂公園與樓下的澀谷橫丁居酒屋街。" }
+                    ]
+                },
+                {
+                    day: 5,
+                    date: "3/9 (週一)",
+                    title: "銀座奢華與下町風情",
+                    theme: "新舊東京對比",
+                    summary: "步行者天國的奢華購物，對比月島文字燒的庶民美味。",
+                    stats: { walk: "14,000步", cost: "¥25,000" },
+                    center: [35.6719, 139.7639],
+                    zoom: 14,
+                    hiddenGems: [
+                        { name: "銀座奧野大樓", desc: "昭和初期的舊公寓，現為藝廊聚集地，手動電梯是亮點。", type: "建築" },
+                        { name: "伊東屋", desc: "文具控的天堂，整棟大樓都是高級文具。", type: "購物" }
+                    ],
+                    items: [
+                        { type: "spot", id: "d5-1", name: "銀座 Six", time: "10:30", lat: 35.6696, lng: 139.7640, img: "https://images.unsplash.com/photo-1552590635-27c2c2128abf?auto=format&fit=crop&w=800&q=80", desc: "欣賞中庭藝術裝置，逛蔦屋書店。" },
+                        { type: "spot", id: "d5-2", name: "東京車站", time: "14:00", lat: 35.6812, lng: 139.7671, img: "https://images.unsplash.com/photo-1590252973371-d40b8df05307?auto=format&fit=crop&w=800&q=80", desc: "丸之內側欣賞紅磚建築與皇居外苑。" },
+                        { type: "transit", mode: "Metro 有樂町線", info: "銀座一丁目 -> 月島", time: "17:30" },
+                        { type: "spot", id: "d5-3", name: "月島文字燒街", time: "18:00", lat: 35.6636, lng: 139.7820, img: "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=800&q=80", desc: "體驗自己動手煎文字燒的樂趣。" }
+                    ]
+                },
+                {
+                    day: 6,
+                    date: "3/10 (週二)",
+                    title: "上野最後巡禮",
+                    theme: "美術館與阿美橫丁",
+                    summary: "把握最後時光，在上野公園漫步並採購伴手禮。",
+                    stats: { walk: "10,000步", cost: "¥8,000" },
+                    center: [35.7140, 139.7741],
+                    zoom: 15,
+                    hiddenGems: [
+                        { name: "國際兒童圖書館", desc: "安藤忠雄修復的百年建築，極具美感。", type: "建築" },
+                        { name: "上野大佛", desc: "只有臉的大佛，象徵「不會再落地（落榜）」，適合考生。", type: "文化" }
+                    ],
+                    items: [
+                        { type: "spot", id: "d6-1", name: "上野公園", time: "09:30", lat: 35.7140, lng: 139.7741, img: "https://images.unsplash.com/photo-1589531758525-47cb502f127b?auto=format&fit=crop&w=800&q=80", desc: "早晨散步，若有早開櫻花可賞。" },
+                        { type: "spot", id: "d6-2", name: "阿美橫丁", time: "11:00", lat: 35.7088, lng: 139.7742, img: "https://images.unsplash.com/photo-1628588836577-4404928e1248?auto=format&fit=crop&w=800&q=80", desc: "二木之菓子掃貨，藥妝店最後補給。" },
+                        { type: "transit", mode: "Keisei Skyliner", info: "上野 -> 成田機場", time: "13:00" },
+                        { type: "spot", id: "d6-3", name: "成田機場", time: "14:00", lat: 35.7719, lng: 140.3928, img: "https://images.unsplash.com/photo-1517173950796-932d20443427?auto=format&fit=crop&w=800&q=80", desc: "逛免稅店，準備登機返家。" }
+                    ]
+                }
+            ],
+            expenses: [
+                { cat: "機票", amount: 25000, percent: 25, color: "bg-brand-coral" },
+                { cat: "住宿", amount: 40000, percent: 40, color: "bg-brand-teal" },
+                { cat: "交通", amount: 10000, percent: 10, color: "bg-blue-500" },
+                { cat: "餐飲", amount: 20000, percent: 20, color: "bg-yellow-400" },
+                { cat: "門票/其他", amount: 5000, percent: 5, color: "bg-gray-400" }
+            ],
+            // 分類美食指南
+            foodCategories: [
+                {
+                    title: "職人正餐 (Main Course)",
+                    items: [
+                         { name: "Afuri 拉麵", loc: "原宿/中目黑", img: "https://images.unsplash.com/photo-1569691105751-88df003de7a4?auto=format&fit=crop&w=800&q=80", desc: "清爽柚子鹽拉麵，帶有炭烤叉燒香氣。" },
+                         { name: "敘敘苑燒肉", loc: "新宿/晴空塔", img: "https://images.unsplash.com/photo-1594052303531-df13b198032d?auto=format&fit=crop&w=800&q=80", desc: "高樓層景觀燒肉，午間套餐 CP 值極高。" },
+                         { name: "根室花丸", loc: "銀座/丸之內", img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80", desc: "北海道直送迴轉壽司，新鮮度滿分。" },
+                         { name: "炸牛排 Motomura", loc: "澀谷/新宿", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=80", desc: "外酥內嫩的炸牛排，在石板上自己煎烤。" }
+                    ]
+                },
+                {
+                    title: "甜點與咖啡 (Sweets & Coffee)",
+                    items: [
+                         { name: "Harbs", loc: "六本木/新宿", img: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80", desc: "傳說中的水果千層蛋糕，鮮奶油甜而不膩。" },
+                         { name: "Blue Bottle", loc: "清澄白河/青山", img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800&q=80", desc: "咖啡界的 Apple，極簡風格與手沖咖啡。" },
+                         { name: "Fuglen Tokyo", loc: "代代木公園", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80", desc: "來自挪威的復古咖啡廳，早上喝咖啡晚上變酒吧。" },
+                         { name: "壽壽喜園", loc: "淺草", img: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=800&q=80", desc: "世界最濃抹茶冰淇淋，七種濃度任選。" }
+                    ]
+                },
+                {
+                    title: "街頭小吃 (Street Food)",
+                    items: [
+                        { name: "淺草炸肉餅", loc: "淺草仲見世通", img: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80", desc: "多汁爆漿的黑毛和牛炸肉餅。" },
+                        { name: "築地玉子燒", loc: "築地市場", img: "https://images.unsplash.com/photo-1626804475297-411d8768049a?auto=format&fit=crop&w=800&q=80", desc: "口感綿密微甜，熱騰騰的現做美味。" },
+                        { name: "月島文字燒", loc: "月島", img: "https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=800&q=80", desc: "東京下町名物，自己動手煎出鍋巴香氣。" }
+                    ]
+                }
+            ],
+            specialActivities: [
+                {
+                    title: "東京街頭瑪利歐賽車",
+                    image: "https://images.unsplash.com/photo-1629208006277-c9135064eb99?auto=format&fit=crop&w=800&q=80",
+                    tags: ["需駕照", "預約制", "刺激"],
+                    desc: "穿上角色扮演服裝，駕駛卡丁車行駛在東京的實際街道上！行經澀谷十字路口、東京鐵塔等著名地標，享受路人的注目禮。",
+                    tips: [
+                        "必備文件：台灣護照 + 台灣駕照 + 日文譯本 (或日內瓦公約 IDP)。",
+                        "預約：建議透過 Klook 或 KKday 提前 1-2 個月預約。",
+                        "穿著：避免高跟鞋、長裙，現場提供服裝租借，但建議自備保暖衣物。",
+                        "安全：遵守交通規則，嚴禁行駛中拿出手機拍照。"
+                    ]
+                },
+                {
+                    title: "3/9 (週日) 中山競馬觀賽體驗",
+                    image: "https://images.unsplash.com/photo-1551624467-f584e2a34807?auto=format&fit=crop&w=800&q=80",
+                    tags: ["賽事", "博彩", "美食"],
+                    desc: "體驗日本獨特的賽馬文化！3月9日適逢週日賽事，中山競馬場氣氛熱烈。除了賭馬，場內還有大量美食攤位與公園，適合休閒娛樂。",
+                    tips: [
+                        "交通：JR武藏野線「船橋法典站」有專用地下道直達。",
+                        "入場費：約 200 日圓，建議準備零錢。",
+                        "下注：使用「Mark Sheet」畫卡，單注最低 100 日圓。",
+                        "必吃：場內的「G1 燒」與摩卡咖啡霜淇淋。"
+                    ]
+                }
+            ]
+        };
+        // Compatibility alias
+        const appData = window.appData;
+
+        // --- STATE MANAGEMENT ---
+        const state = {
+            currentPage: 'home',
+            activeDay: 1, // Default Day 1
+            map: null,
+            mapLayerGroup: null,
+            // Responsive Initial State: Collapsed on Mobile, Expanded on Desktop
+            isOverlayExpanded: window.innerWidth >= 768
+        };
+
+        // --- DOM ELEMENTS ---
+        const appContainer = document.getElementById('app-container');
+
+        // --- UI FUNCTIONS ---
+        const ui = {
+            // Helper to prevent image errors
+            imgFallback: (e) => {
+                // Use a nice generic Tokyo image instead of text
+                e.target.src = 'https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?auto=format&fit=crop&w=800&q=80';
+            },
+
+            renderHome: () => {
+                return `
+                    <div class="h-full overflow-y-auto scrollbar-default fade-in pb-20">
+                        <div class="relative bg-brand-teal h-96 flex items-center justify-center text-white overflow-hidden">
+                            <img src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1600&q=80" class="absolute w-full h-full object-cover opacity-60">
+                            <div class="relative z-10 text-center px-4">
+                                <h1 class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">Ready for Tokyo?</h1>
+                                <p class="text-xl md:text-2xl mb-8 font-light">6 天 5 夜 · 職人精神 · 熱血賽事 · 購物美食</p>
+                                <button onclick="router.navigate('dashboard')" class="bg-brand-coral hover:bg-red-500 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105">
+                                    查看行程儀表板
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="max-w-7xl mx-auto px-4 py-12">
+                            <h2 class="text-2xl font-bold mb-6 text-brand-dark border-l-4 border-brand-coral pl-4">行程亮點</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition cursor-pointer" onclick="router.navigate('special')">
+                                    <div class="h-48 bg-gray-200 overflow-hidden relative">
+                                        <div class="absolute top-2 right-2 bg-brand-coral text-white text-xs font-bold px-2 py-1 rounded">HOT</div>
+                                         <img src="https://images.unsplash.com/photo-1614946397444-4f0164b73255?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover transform hover:scale-105 transition duration-700" onerror="ui.imgFallback(event)">
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="text-brand-coral font-bold text-sm mb-2">DAY 3</div>
+                                        <h3 class="font-bold text-xl mb-2">WBC 熱血棒球</h3>
+                                        <p class="text-gray-600 text-sm">東京巨蛋朝聖，體驗日本職棒的應援文化與震撼。</p>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
+                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                        <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover transform hover:scale-105 transition duration-700" onerror="ui.imgFallback(event)">
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="text-brand-coral font-bold text-sm mb-2">DAY 2</div>
+                                        <h3 class="font-bold text-xl mb-2">藏前職人散策</h3>
+                                        <p class="text-gray-600 text-sm">走訪東京布魯克林，手作筆記本與精品咖啡的午後。</p>
+                                    </div>
+                                </div>
+                                <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
+                                    <div class="h-48 bg-gray-200 overflow-hidden">
+                                        <img src="https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover transform hover:scale-105 transition duration-700" onerror="ui.imgFallback(event)">
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="text-brand-coral font-bold text-sm mb-2">DAY 4</div>
+                                        <h3 class="font-bold text-xl mb-2">Shibuya Sky</h3>
+                                        <p class="text-gray-600 text-sm">229公尺高空，360度俯瞰東京最繁忙的十字路口。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderDashboard: () => {
+                return `
+                    <div class="flex flex-col md:flex-row h-full">
+                        <!-- Left Panel: Timeline -->
+                        <div class="w-full md:w-1/3 lg:w-96 bg-white h-1/2 md:h-full overflow-y-auto z-20 shadow-xl scrollbar-default flex flex-col">
+                            <div class="p-4 bg-brand-teal text-white sticky top-0 z-30 shadow-md">
+                                <h2 class="text-xl font-bold">行程總覽</h2>
+                                <p class="text-sm opacity-90 text-white">${appData.trip.startDate} 出發</p>
+                            </div>
+                            <div class="flex-grow" id="timeline-list-container">
+                                ${appData.days.map(day => ui.components.dayAccordion(day)).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Map -->
+                        <div class="w-full md:flex-1 h-1/2 md:h-full relative bg-gray-100">
+                            <div id="map"></div>
+                            
+                            <!-- Overlay Card -->
+                            <div id="map-overlay" class="absolute top-4 right-4 bg-white rounded-xl shadow-2xl p-4 w-64 md:w-80 z-[400] transition-all duration-300 transform origin-top-right">
+                                <!-- Content injected by JS -->
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderFood: () => {
+                return `
+                    <div class="h-full overflow-y-auto p-4 md:p-8 scrollbar-default fade-in pb-24">
+                        <div class="max-w-7xl mx-auto">
+                             <h2 class="text-3xl font-bold mb-6 text-brand-dark border-l-4 border-brand-coral pl-4">美食指南</h2>
+                             <div class="space-y-12">
+                                ${appData.foodCategories.map(category => `
+                                    <div>
+                                        <h3 class="text-xl font-bold mb-4 text-brand-dark flex items-center">
+                                            <span class="w-2 h-8 bg-brand-coral mr-2 rounded-full"></span>
+                                            ${category.title}
+                                        </h3>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                            ${category.items.map(item => `
+                                                <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden group">
+                                                    <div class="h-48 overflow-hidden">
+                                                        <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" onerror="ui.imgFallback(event)">
+                                                    </div>
+                                                    <div class="p-4">
+                                                        <div class="flex justify-between items-start">
+                                                            <h3 class="font-bold text-lg">${item.name}</h3>
+                                                            <span class="bg-brand-sand text-xs px-2 py-1 rounded-full text-gray-600 font-bold">${item.loc}</span>
+                                                        </div>
+                                                        <p class="text-gray-500 text-sm mt-2">${item.desc}</p>
+                                                    </div>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderSpecial: () => {
+                return `
+                     <div class="h-full overflow-y-auto p-4 md:p-8 scrollbar-default fade-in pb-24">
+                        <div class="max-w-4xl mx-auto">
+                            <h2 class="text-3xl font-bold mb-8 text-brand-dark border-l-4 border-brand-coral pl-4">特別活動指南</h2>
+                            
+                            <div class="space-y-12">
+                                ${appData.specialActivities.map((act, idx) => `
+                                    <div class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col md:flex-row">
+                                        <div class="md:w-2/5 h-64 md:h-auto relative">
+                                            <img src="${act.image}" class="w-full h-full object-cover" onerror="ui.imgFallback(event)">
+                                        </div>
+                                        <div class="p-6 md:p-8 md:w-3/5 flex flex-col justify-center">
+                                            <div class="flex flex-wrap gap-2 mb-3">
+                                                ${act.tags.map(tag => `<span class="bg-brand-teal text-white text-xs px-2 py-1 rounded-full font-bold">${tag}</span>`).join('')}
+                                            </div>
+                                            <h3 class="text-2xl font-bold mb-3 text-brand-dark">${act.title}</h3>
+                                            <p class="text-gray-600 mb-6 leading-relaxed">${act.desc}</p>
+                                            
+                                            <div class="bg-brand-sand rounded-xl p-4">
+                                                <h4 class="font-bold text-sm text-brand-dark mb-2 flex items-center">
+                                                    <svg class="w-4 h-4 mr-1 text-brand-coral" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                    攻略 Tips
+                                                </h4>
+                                                <ul class="text-sm text-gray-600 space-y-1">
+                                                    ${act.tips.map(tip => `<li class="flex items-start"><span class="mr-2 text-brand-coral">•</span>${tip}</li>`).join('')}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                     </div>
+                `;
+            },
+
+            renderTools: () => {
+                return `
+                    <div class="h-full overflow-y-auto p-4 md:p-8 scrollbar-default fade-in pb-24">
+                        <div class="max-w-5xl mx-auto">
+                            <h2 class="text-3xl font-bold mb-6 text-brand-dark border-l-4 border-brand-coral pl-4">交通與預算</h2>
+                            
+                            <!-- JR Map Section -->
+                            <div class="mb-10">
+                                <h3 class="text-xl font-bold mb-4 text-brand-dark flex items-center">
+                                    <span class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white mr-2">JR</span>
+                                    東京 JR 路線圖
+                                </h3>
+                                <div class="bg-white rounded-xl shadow-lg p-4 overflow-hidden">
+                                    <div class="relative w-full h-64 md:h-96 bg-gray-100 rounded-lg overflow-hidden group">
+                                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Tokyo_JR_network_map.svg/1280px-Tokyo_JR_network_map.svg.png" class="w-full h-full object-contain transform group-hover:scale-110 transition duration-500 cursor-zoom-in" onclick="window.open(this.src, '_blank')">
+                                        <div class="absolute bottom-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">點擊放大</div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2 text-center">包含了山手線、中央線等主要 JR 路線。 (圖片來源: Wikimedia Commons)</p>
+                                </div>
+                            </div>
+
+                            <!-- Transport Guide -->
+                            <div class="mb-10">
+                                <h3 class="text-xl font-bold mb-4 text-brand-dark flex items-center">
+                                    <span class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white mr-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></span>
+                                    機場與市區交通攻略
+                                </h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <!-- Airport -->
+                                    <div class="bg-white rounded-xl shadow p-6 border-t-4 border-blue-600">
+                                        <div class="font-bold text-lg mb-2">成田機場交通</div>
+                                        <div class="mb-4 text-sm text-gray-500">最快 vs 最直達</div>
+                                        <ul class="space-y-3 text-sm">
+                                            <li class="pb-2 border-b">
+                                                <div class="font-bold text-blue-600">Skyliner (首選)</div>
+                                                <div class="text-gray-600">成田 ➡ 上野/日暮里 (40分)。全車對號，位置大，適合轉乘 JR 山手線。</div>
+                                            </li>
+                                            <li class="pb-2 border-b">
+                                                <div class="font-bold text-red-600">N'EX 成田特快</div>
+                                                <div class="text-gray-600">成田 ➡ 新宿/澀谷 (80分)。直達免轉車，但較慢且貴，適合行李多者。</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- City Metro -->
+                                    <div class="bg-white rounded-xl shadow p-6 border-t-4 border-brand-teal">
+                                        <div class="font-bold text-lg mb-2">市區地鐵 (Metro)</div>
+                                        <div class="mb-4 text-sm text-gray-500">省錢神券 Tokyo Subway Ticket</div>
+                                        <div class="bg-gray-50 p-3 rounded mb-3 text-xs text-gray-600">
+                                            可搭乘 13 條地鐵線 (Metro + 都營)，不能搭 JR。
+                                        </div>
+                                        <div class="flex justify-between items-center text-sm font-bold mb-1">
+                                            <span>24小時券</span> <span>¥800</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-sm font-bold mb-1">
+                                            <span>48小時券</span> <span>¥1,200</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-sm font-bold text-brand-coral">
+                                            <span>72小時券</span> <span>¥1,500 (最推)</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- IC Card -->
+                                    <div class="bg-white rounded-xl shadow p-6 border-t-4 border-green-500">
+                                        <div class="font-bold text-lg mb-2">IC 卡 (Suica/Pasmo)</div>
+                                        <div class="mb-4 text-sm text-gray-500">像悠遊卡一樣嗶進站</div>
+                                        <ul class="space-y-3 text-sm">
+                                            <li class="flex items-start">
+                                                <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-0.5 rounded mr-2 mt-0.5">iPhone</span>
+                                                <span class="text-gray-600">錢包 App 按 + 號，直接新增 Suica，用 Apple Pay 儲值即可。</span>
+                                            </li>
+                                            <li class="flex items-start">
+                                                <span class="bg-gray-100 text-gray-800 text-xs font-bold px-2 py-0.5 rounded mr-2 mt-0.5">實體卡</span>
+                                                <span class="text-gray-600">目前晶片荒，僅機場可買 Welcome Suica (紅色，28天效期)。</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Expenses Chart -->
+                            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                                <h3 class="text-xl font-bold mb-4 text-brand-dark">預算分佈 (總計 ¥100,000 / 人)</h3>
+                                <div class="space-y-4">
+                                    ${appData.expenses.map(exp => `
+                                        <div>
+                                            <div class="flex justify-between mb-1">
+                                                <span class="text-sm font-medium text-gray-700">${exp.cat}</span>
+                                                <span class="text-sm font-medium text-gray-700">¥${exp.amount.toLocaleString()} (${exp.percent}%)</span>
+                                            </div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                                <div class="${exp.color} h-2.5 rounded-full" style="width: ${exp.percent}%"></div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                             <div class="bg-white rounded-xl shadow p-6">
+                                <h3 class="font-bold text-lg mb-3 text-brand-coral">緊急聯絡</h3>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li class="flex justify-between border-b pb-1"><span>警察</span> <span class="font-mono font-bold">110</span></li>
+                                    <li class="flex justify-between border-b pb-1"><span>火警/救護</span> <span class="font-mono font-bold">119</span></li>
+                                    <li class="flex justify-between border-b pb-1"><span>台灣駐日代表處</span> <span class="font-mono font-bold">03-3280-7111</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            components: {
+                dayAccordion: (day) => {
+                    // Check if expanded
+                    const isExpanded = state.activeDay === day.day;
+                    
+                    // Filter spots for numbering logic
+                    let spotCounter = 0;
+                    
+                    const itemsHtml = day.items.map((item, index) => {
+                        const isSpot = item.type === 'spot';
+                        if (isSpot) spotCounter++;
+                        
+                        return `
+                        <div class="item-card relative pl-12 pb-8 group cursor-pointer hover:bg-gray-50 transition p-2 rounded-r-lg -ml-2" 
+                             onclick="mapLogic.focusItem(${item.lat || 0}, ${item.lng || 0}, '${item.name}', ${isSpot ? spotCounter : -1})">
+                            <!-- Timeline Line -->
+                            <div class="timeline-line"></div>
+                            
+                            <!-- Icon/Dot -->
+                            <div class="absolute left-2 top-3 w-10 h-10 flex items-center justify-center z-10 bg-white">
+                                ${isSpot 
+                                    ? `<div class="w-8 h-8 rounded-full bg-brand-coral text-white flex items-center justify-center text-sm font-bold shadow-md ring-2 ring-white z-10">${spotCounter}</div>` 
+                                    : `<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 ring-2 ring-white z-10"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg></div>`
+                                }
+                            </div>
+
+                            <div class="ml-2">
+                                <div class="flex items-center mb-1">
+                                    <span class="text-xs font-bold text-brand-teal font-mono bg-teal-50 px-2 py-0.5 rounded mr-2">${item.time || ''}</span>
+                                    ${item.type === 'transit' ? `<span class="text-xs text-gray-400 border border-gray-200 px-1 rounded">交通</span>` : ''}
+                                </div>
+                                <h4 class="font-bold text-gray-800 text-sm md:text-base leading-tight mb-1">${item.name || item.mode}</h4>
+                                <p class="text-xs text-gray-500 line-clamp-2">${item.desc || item.info}</p>
+                                ${isSpot && item.img ? `
+                                    <div class="mt-2 h-32 w-full rounded-lg overflow-hidden relative shadow-sm group-hover:shadow-md transition">
+                                        <img src="${item.img}" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-700" onerror="ui.imgFallback(event)">
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+
+                    // Dynamic styling based on initial render state
+                    const rotateClass = isExpanded ? 'rotate-180' : '';
+                    const headerBg = isExpanded ? 'bg-gray-50' : 'bg-white';
+                    const wrapperClass = isExpanded ? 'open' : '';
+                    const badgeClass = isExpanded ? 'bg-brand-coral text-white' : 'bg-gray-100 text-gray-500';
+
+                    // Add IDs to elements for JS targeting
+                    return `
+                        <div class="border-b border-gray-100">
+                            <button id="accordion-btn-${day.day}" onclick="mapLogic.switchDay(${day.day})" 
+                                class="w-full flex justify-between items-center p-4 focus:outline-none ${headerBg} hover:bg-gray-50 transition cursor-pointer z-10 relative">
+                                <div class="flex items-center">
+                                    <div class="day-badge w-10 h-10 rounded-full ${badgeClass} flex items-center justify-center font-bold text-lg mr-3 transition-colors duration-300 shadow-sm">
+                                        ${day.day}
+                                    </div>
+                                    <div class="text-left">
+                                        <div class="text-xs font-bold text-gray-400 font-mono">${day.date}</div>
+                                        <div class="font-bold text-gray-800 text-sm">${day.title}</div>
+                                    </div>
+                                </div>
+                                <svg id="accordion-icon-${day.day}" class="w-5 h-5 text-gray-400 transform transition-transform duration-300 ${rotateClass}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div id="accordion-wrapper-${day.day}" class="accordion-wrapper ${wrapperClass} bg-white">
+                                <div class="accordion-inner">
+                                    <div class="p-4 pt-0 timeline-container">
+                                        ${itemsHtml}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+                overlayCard: () => {
+                    const day = appData.days.find(d => d.day === state.activeDay);
+                    if (!day) return '<div class="text-sm text-gray-500">請選擇行程天數</div>';
+                    
+                    const contentClass = state.isOverlayExpanded ? 'block' : 'hidden';
+                    const iconRotate = state.isOverlayExpanded ? 'rotate-180' : '';
+
+                    return `
+                        <div class="flex justify-between items-center mb-2">
+                            <div>
+                                <h3 class="font-bold text-lg text-brand-dark">Day ${day.day}: ${day.theme}</h3>
+                            </div>
+                            <button onclick="ui.toggleOverlay()" class="text-gray-400 hover:text-brand-coral transition transform ${iconRotate}">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                            </button>
+                        </div>
+                        <div id="overlay-details" class="${contentClass} transition-all fade-in">
+                             <p class="text-xs text-gray-500 mb-3 leading-relaxed">${day.summary}</p>
+                             <div class="flex justify-between text-xs font-bold text-gray-600 bg-gray-50 p-2 rounded mb-3">
+                                <div class="flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> ${day.stats.walk}</div>
+                                <div class="flex items-center"><svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${day.stats.cost}</div>
+                             </div>
+                             <button onclick="ui.openModal()" class="w-full bg-brand-teal hover:bg-teal-700 text-white text-xs font-bold py-2 rounded shadow transition flex items-center justify-center">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                看看附近推薦
+                             </button>
+                        </div>
+                    `;
+                }
+            },
+
+            updateOverlay: () => {
+                const el = document.getElementById('map-overlay');
+                if (el) el.innerHTML = ui.components.overlayCard();
+            },
+
+            toggleOverlay: () => {
+                state.isOverlayExpanded = !state.isOverlayExpanded;
+                ui.updateOverlay();
+            },
+
+            openModal: () => {
+                const day = appData.days.find(d => d.day === state.activeDay);
+                if (!day) return;
+
+                const modal = document.getElementById('modal-backdrop');
+                const content = document.getElementById('modal-content');
+                
+                // Generate dynamic gems content
+                const gemsHtml = day.hiddenGems.map(gem => `
+                    <div class="mb-4 border-b border-gray-100 pb-3 last:border-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="font-bold text-gray-800">${gem.name}</h4>
+                            <span class="text-xs px-2 py-0.5 bg-brand-sand text-gray-500 rounded-full">${gem.type}</span>
+                        </div>
+                        <p class="text-sm text-gray-600">${gem.desc}</p>
+                    </div>
+                `).join('');
+
+                content.innerHTML = gemsHtml;
+                modal.classList.remove('hidden');
+            },
+
+            closeModal: () => {
+                document.getElementById('modal-backdrop').classList.add('hidden');
+            }
+        };
+
+        // --- MAP LOGIC ---
+        const mapLogic = {
+            init: () => {
+                if (state.map) {
+                    state.map.remove();
+                    state.map = null;
+                }
+
+                const day = appData.days.find(d => d.day === state.activeDay);
+                // If no active day (all collapsed), default to Day 1 view but no markers or just keep Tokyo view
+                const center = day ? day.center : [35.6895, 139.6917]; // Tokyo default
+                const zoom = day ? day.zoom : 12;
+
+                state.map = L.map('map', {
+                    zoomControl: false
+                }).setView(center, zoom);
+
+                L.control.zoom({ position: 'topleft' }).addTo(state.map);
+
+                // Using Google Maps Tiles
+                L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                    attribution: 'Google Maps',
+                    maxZoom: 20
+                }).addTo(state.map);
+
+                state.mapLayerGroup = L.layerGroup().addTo(state.map);
+                
+                if (day) {
+                    mapLogic.renderMarkers(day);
+                }
+                ui.updateOverlay();
+            },
+
+            renderMarkers: (day) => {
+                if(!state.mapLayerGroup) return;
+                state.mapLayerGroup.clearLayers();
+
+                let spotCounter = 0;
+                day.items.forEach(item => {
+                    if (item.type === 'spot' && item.lat && item.lng) {
+                        spotCounter++;
+                        
+                        // Modified Icon Construction
+                        const iconHtml = `
+                            <div class="marker-pin">
+                                <span class="marker-text">${spotCounter}</span>
+                            </div>
+                        `;
+                        
+                        const customIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: iconHtml,
+                            iconSize: [40, 40],   // Matching CSS width/height + borders
+                            iconAnchor: [20, 20], // Center of the circle
+                            popupAnchor: [0, -25] // Popup appears above
+                        });
+
+                        const marker = L.marker([item.lat, item.lng], { icon: customIcon })
+                            .bindPopup(`
+                                <div class="text-center p-2">
+                                    <h3 class="font-bold text-base mb-1">${item.name}</h3>
+                                    <p class="text-xs text-gray-500">${item.time}</p>
+                                </div>
+                            `);
+                        
+                        state.mapLayerGroup.addLayer(marker);
+                    }
+                });
+            },
+
+            switchDay: (dayNum) => {
+                const prevDay = state.activeDay;
+                const currentDay = dayNum;
+                
+                // Toggle state logic
+                if (prevDay === currentDay) {
+                    state.activeDay = null;
+                } else {
+                    state.activeDay = currentDay;
+                }
+
+                // Helper to update UI for a specific day
+                const updateDayUI = (d, isActive) => {
+                    const wrapper = document.getElementById(`accordion-wrapper-${d}`);
+                    const btn = document.getElementById(`accordion-btn-${d}`);
+                    const icon = document.getElementById(`accordion-icon-${d}`);
+                    const badge = btn?.querySelector('.day-badge');
+
+                    if (wrapper) {
+                        if (isActive) wrapper.classList.add('open');
+                        else wrapper.classList.remove('open');
+                    }
+                    
+                    if (btn) {
+                        if (isActive) {
+                            btn.classList.remove('bg-white');
+                            btn.classList.add('bg-gray-50');
+                        } else {
+                            btn.classList.remove('bg-gray-50');
+                            btn.classList.add('bg-white');
+                        }
+                    }
+
+                    if (icon) {
+                        if (isActive) icon.classList.add('rotate-180');
+                        else icon.classList.remove('rotate-180');
+                    }
+
+                    if (badge) {
+                        if (isActive) {
+                            badge.classList.remove('bg-gray-100', 'text-gray-500');
+                            badge.classList.add('bg-brand-coral', 'text-white');
+                        } else {
+                            badge.classList.remove('bg-brand-coral', 'text-white');
+                            badge.classList.add('bg-gray-100', 'text-gray-500');
+                        }
+                    }
+                };
+
+                // Close previous day if it exists
+                if (prevDay) {
+                    updateDayUI(prevDay, false);
+                }
+
+                // Open new day if state is not null
+                if (state.activeDay) {
+                    updateDayUI(state.activeDay, true);
+                }
+
+                // Update Map
+                if (state.activeDay) {
+                    const day = appData.days.find(d => d.day === state.activeDay);
+                    if (state.map && day) {
+                        state.map.setView(day.center, day.zoom, { animate: true, duration: 1.0 });
+                        mapLogic.renderMarkers(day);
+                    }
+                } else {
+                    // If no active day, clear markers
+                    if (state.mapLayerGroup) state.mapLayerGroup.clearLayers();
+                }
+
+                // Update Overlay
+                ui.updateOverlay();
+            },
+
+            focusItem: (lat, lng, name, index) => {
+                // Prevent map interaction if coords are missing
+                if (!lat || !lng) return;
+                
+                if (state.map) {
+                    state.map.setView([lat, lng], 16, { animate: true, duration: 0.5 });
+                    
+                    state.mapLayerGroup.eachLayer(layer => {
+                        const popupContent = layer.getPopup()?.getContent();
+                        if (popupContent && popupContent.includes(name)) {
+                            layer.openPopup();
+                        }
+                    });
+                }
+            }
+        };
+
+        // --- ROUTER ---
+        const router = {
+            navigate: (page) => {
+                state.currentPage = page;
+                appContainer.innerHTML = ''; // Clear content
+                
+                // Update active state in nav (simple styling)
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    if (btn.dataset.page === page) {
+                        btn.classList.add('text-brand-coral', 'border-b-2', 'border-brand-coral');
+                        btn.classList.remove('text-gray-500');
+                    } else {
+                        btn.classList.remove('text-brand-coral', 'border-b-2', 'border-brand-coral');
+                        btn.classList.add('text-gray-500');
+                    }
+                });
+
+                switch (page) {
+                    case 'home':
+                        appContainer.innerHTML = ui.renderHome();
+                        break;
+                    case 'dashboard':
+                        appContainer.innerHTML = ui.renderDashboard();
+                        // Delay map init slightly to ensure DOM is ready
+                        setTimeout(() => mapLogic.init(), 100);
+                        break;
+                    case 'food':
+                        appContainer.innerHTML = ui.renderFood();
+                        break;
+                    case 'special':
+                        appContainer.innerHTML = ui.renderSpecial();
+                        break;
+                    case 'tools':
+                        appContainer.innerHTML = ui.renderTools();
+                        break;
+                    default:
+                        appContainer.innerHTML = ui.renderHome();
+                }
+            }
+        };
+
+        // --- INIT ---
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            router.navigate('home');
+        });
+
+    </script>
+</body>
+</html>
