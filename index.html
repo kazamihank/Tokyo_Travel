@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2026 東京職人與熱血之旅</title>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Poppins:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -34,10 +37,12 @@
     </script>
 
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
     <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <style>
         /* Custom Styles & Overrides */
@@ -46,7 +51,7 @@
             color: #484848;
             -webkit-font-smoothing: antialiased;
         }
-        
+
         /* Map Container Heights */
         #map {
             height: 100%;
@@ -58,6 +63,7 @@
         .scrollbar-default::-webkit-scrollbar {
             width: 6px;
         }
+
         .scrollbar-default::-webkit-scrollbar-thumb {
             background-color: #cbd5e1;
             border-radius: 4px;
@@ -68,72 +74,89 @@
             background: transparent;
             border: none;
         }
+
         .marker-pin {
             width: 36px;
             height: 36px;
             border-radius: 50%;
             background: #FF5A5F;
             border: 3px solid #ffffff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
             display: flex;
             align-items: center;
             justify-content: center;
             transition: transform 0.2s ease;
         }
+
         .marker-pin:hover {
             transform: scale(1.1);
             background: #ff383e;
         }
+
         /* Removed the old ::after pseudo-element that created the hole */
-        
+
         .marker-text {
             color: #ffffff;
             font-weight: 700;
             font-size: 14px;
             font-family: 'Poppins', sans-serif;
-            margin-top: 1px; /* Optical center adjustment */
+            margin-top: 1px;
+            /* Optical center adjustment */
         }
 
         /* Timeline UI */
         .timeline-container {
             position: relative;
         }
+
         .timeline-line {
             position: absolute;
-            left: 23px; /* Center of the 48px width icon area */
+            left: 23px;
+            /* Center of the 48px width icon area */
             top: 40px;
             bottom: -20px;
             width: 2px;
             background-color: #e2e8f0;
             z-index: 0;
         }
+
         .item-card:last-child .timeline-line {
             display: none;
         }
-        
+
         /* Animations */
         .fade-in {
             animation: fadeIn 0.3s ease-in-out;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
+
         /* Accordion Transition */
         .accordion-wrapper {
             display: grid;
             grid-template-rows: 0fr;
             transition: grid-template-rows 0.3s ease-out;
         }
+
         .accordion-wrapper.open {
             grid-template-rows: 1fr;
         }
+
         .accordion-inner {
             overflow: hidden;
         }
     </style>
-<script type="importmap">
+    <script type="importmap">
 {
   "imports": {
     "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
@@ -141,6 +164,7 @@
 }
 </script>
 </head>
+
 <body class="flex flex-col h-screen overflow-hidden">
 
     <!-- Navigation -->
@@ -149,22 +173,36 @@
             <div class="flex justify-between items-center h-full">
                 <div class="flex items-center cursor-pointer" onclick="router.navigate('home')">
                     <svg class="h-8 w-8 text-brand-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="ml-2 font-bold text-xl tracking-tight text-brand-dark">Tokyo<span class="text-brand-coral">2026</span></span>
+                    <span class="ml-2 font-bold text-xl tracking-tight text-brand-dark">Tokyo<span
+                            class="text-brand-coral">2026</span></span>
                 </div>
                 <div class="hidden md:flex space-x-6">
-                    <button onclick="router.navigate('home')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="home">首頁</button>
-                    <button onclick="router.navigate('dashboard')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="dashboard">行程儀表板</button>
-                    <button onclick="router.navigate('special')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="special">特別活動</button>
-                    <button onclick="router.navigate('food')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="food">美食指南</button>
-                    <button onclick="router.navigate('tools')" class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition" data-page="tools">交通與工具</button>
+                    <button onclick="router.navigate('home')"
+                        class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition"
+                        data-page="home">首頁</button>
+                    <button onclick="router.navigate('dashboard')"
+                        class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition"
+                        data-page="dashboard">行程儀表板</button>
+                    <button onclick="router.navigate('special')"
+                        class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition"
+                        data-page="special">特別活動</button>
+                    <button onclick="router.navigate('food')"
+                        class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition"
+                        data-page="food">美食指南</button>
+                    <button onclick="router.navigate('tools')"
+                        class="nav-btn text-gray-500 hover:text-brand-coral font-medium transition"
+                        data-page="tools">交通與工具</button>
                 </div>
                 <!-- Mobile Menu Button -->
                 <div class="md:hidden flex items-center">
-                    <button onclick="toggleMobileMenu()" class="text-gray-500 hover:text-brand-coral focus:outline-none">
+                    <button onclick="toggleMobileMenu()"
+                        class="text-gray-500 hover:text-brand-coral focus:outline-none">
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
                 </div>
@@ -173,11 +211,16 @@
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-b border-gray-200 absolute w-full z-50">
             <div class="px-2 pt-2 pb-3 space-y-1">
-                <button onclick="router.navigate('home'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">首頁</button>
-                <button onclick="router.navigate('dashboard'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">行程儀表板</button>
-                <button onclick="router.navigate('special'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">特別活動</button>
-                <button onclick="router.navigate('food'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">美食指南</button>
-                <button onclick="router.navigate('tools'); toggleMobileMenu()" class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">交通與工具</button>
+                <button onclick="router.navigate('home'); toggleMobileMenu()"
+                    class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">首頁</button>
+                <button onclick="router.navigate('dashboard'); toggleMobileMenu()"
+                    class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">行程儀表板</button>
+                <button onclick="router.navigate('special'); toggleMobileMenu()"
+                    class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">特別活動</button>
+                <button onclick="router.navigate('food'); toggleMobileMenu()"
+                    class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">美食指南</button>
+                <button onclick="router.navigate('tools'); toggleMobileMenu()"
+                    class="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-brand-coral hover:bg-gray-50">交通與工具</button>
             </div>
         </div>
     </nav>
@@ -188,15 +231,22 @@
     </main>
 
     <!-- Modal (Hidden Gems) -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden flex items-center justify-center p-4">
+    <div id="modal-backdrop"
+        class="fixed inset-0 bg-black bg-opacity-50 z-[100] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col fade-in">
             <div class="p-4 border-b flex justify-between items-center bg-brand-teal text-white">
                 <h3 class="font-bold text-lg flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
                     附近隱藏推薦
                 </h3>
                 <button onclick="ui.closeModal()" class="hover:bg-white/20 rounded-full p-1 transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
                 </button>
             </div>
             <div id="modal-content" class="p-4 overflow-y-auto">
@@ -350,19 +400,19 @@
                 {
                     title: "職人正餐 (Main Course)",
                     items: [
-                         { name: "Afuri 拉麵", loc: "原宿/中目黑", img: "https://images.unsplash.com/photo-1569691105751-88df003de7a4?auto=format&fit=crop&w=800&q=80", desc: "清爽柚子鹽拉麵，帶有炭烤叉燒香氣。" },
-                         { name: "敘敘苑燒肉", loc: "新宿/晴空塔", img: "https://images.unsplash.com/photo-1594052303531-df13b198032d?auto=format&fit=crop&w=800&q=80", desc: "高樓層景觀燒肉，午間套餐 CP 值極高。" },
-                         { name: "根室花丸", loc: "銀座/丸之內", img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80", desc: "北海道直送迴轉壽司，新鮮度滿分。" },
-                         { name: "炸牛排 Motomura", loc: "澀谷/新宿", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=80", desc: "外酥內嫩的炸牛排，在石板上自己煎烤。" }
+                        { name: "Afuri 拉麵", loc: "原宿/中目黑", img: "https://images.unsplash.com/photo-1569691105751-88df003de7a4?auto=format&fit=crop&w=800&q=80", desc: "清爽柚子鹽拉麵，帶有炭烤叉燒香氣。" },
+                        { name: "敘敘苑燒肉", loc: "新宿/晴空塔", img: "https://images.unsplash.com/photo-1594052303531-df13b198032d?auto=format&fit=crop&w=800&q=80", desc: "高樓層景觀燒肉，午間套餐 CP 值極高。" },
+                        { name: "根室花丸", loc: "銀座/丸之內", img: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80", desc: "北海道直送迴轉壽司，新鮮度滿分。" },
+                        { name: "炸牛排 Motomura", loc: "澀谷/新宿", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=800&q=80", desc: "外酥內嫩的炸牛排，在石板上自己煎烤。" }
                     ]
                 },
                 {
                     title: "甜點與咖啡 (Sweets & Coffee)",
                     items: [
-                         { name: "Harbs", loc: "六本木/新宿", img: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80", desc: "傳說中的水果千層蛋糕，鮮奶油甜而不膩。" },
-                         { name: "Blue Bottle", loc: "清澄白河/青山", img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800&q=80", desc: "咖啡界的 Apple，極簡風格與手沖咖啡。" },
-                         { name: "Fuglen Tokyo", loc: "代代木公園", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80", desc: "來自挪威的復古咖啡廳，早上喝咖啡晚上變酒吧。" },
-                         { name: "壽壽喜園", loc: "淺草", img: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=800&q=80", desc: "世界最濃抹茶冰淇淋，七種濃度任選。" }
+                        { name: "Harbs", loc: "六本木/新宿", img: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=800&q=80", desc: "傳說中的水果千層蛋糕，鮮奶油甜而不膩。" },
+                        { name: "Blue Bottle", loc: "清澄白河/青山", img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=800&q=80", desc: "咖啡界的 Apple，極簡風格與手沖咖啡。" },
+                        { name: "Fuglen Tokyo", loc: "代代木公園", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80", desc: "來自挪威的復古咖啡廳，早上喝咖啡晚上變酒吧。" },
+                        { name: "壽壽喜園", loc: "淺草", img: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=800&q=80", desc: "世界最濃抹茶冰淇淋，七種濃度任選。" }
                     ]
                 },
                 {
@@ -694,14 +744,14 @@
                 dayAccordion: (day) => {
                     // Check if expanded
                     const isExpanded = state.activeDay === day.day;
-                    
+
                     // Filter spots for numbering logic
                     let spotCounter = 0;
-                    
+
                     const itemsHtml = day.items.map((item, index) => {
                         const isSpot = item.type === 'spot';
                         if (isSpot) spotCounter++;
-                        
+
                         return `
                         <div class="item-card relative pl-12 pb-8 group cursor-pointer hover:bg-gray-50 transition p-2 rounded-r-lg -ml-2" 
                              onclick="mapLogic.focusItem(${item.lat || 0}, ${item.lng || 0}, '${item.name}', ${isSpot ? spotCounter : -1})">
@@ -710,10 +760,10 @@
                             
                             <!-- Icon/Dot -->
                             <div class="absolute left-2 top-3 w-10 h-10 flex items-center justify-center z-10 bg-white">
-                                ${isSpot 
-                                    ? `<div class="w-8 h-8 rounded-full bg-brand-coral text-white flex items-center justify-center text-sm font-bold shadow-md ring-2 ring-white z-10">${spotCounter}</div>` 
-                                    : `<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 ring-2 ring-white z-10"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg></div>`
-                                }
+                                ${isSpot
+                                ? `<div class="w-8 h-8 rounded-full bg-brand-coral text-white flex items-center justify-center text-sm font-bold shadow-md ring-2 ring-white z-10">${spotCounter}</div>`
+                                : `<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 ring-2 ring-white z-10"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg></div>`
+                            }
                             </div>
 
                             <div class="ml-2">
@@ -771,7 +821,7 @@
                 overlayCard: () => {
                     const day = appData.days.find(d => d.day === state.activeDay);
                     if (!day) return '<div class="text-sm text-gray-500">請選擇行程天數</div>';
-                    
+
                     const contentClass = state.isOverlayExpanded ? 'block' : 'hidden';
                     const iconRotate = state.isOverlayExpanded ? 'rotate-180' : '';
 
@@ -815,7 +865,7 @@
 
                 const modal = document.getElementById('modal-backdrop');
                 const content = document.getElementById('modal-content');
-                
+
                 // Generate dynamic gems content
                 const gemsHtml = day.hiddenGems.map(gem => `
                     <div class="mb-4 border-b border-gray-100 pb-3 last:border-0">
@@ -862,7 +912,7 @@
                 }).addTo(state.map);
 
                 state.mapLayerGroup = L.layerGroup().addTo(state.map);
-                
+
                 if (day) {
                     mapLogic.renderMarkers(day);
                 }
@@ -870,21 +920,21 @@
             },
 
             renderMarkers: (day) => {
-                if(!state.mapLayerGroup) return;
+                if (!state.mapLayerGroup) return;
                 state.mapLayerGroup.clearLayers();
 
                 let spotCounter = 0;
                 day.items.forEach(item => {
                     if (item.type === 'spot' && item.lat && item.lng) {
                         spotCounter++;
-                        
+
                         // Modified Icon Construction
                         const iconHtml = `
                             <div class="marker-pin">
                                 <span class="marker-text">${spotCounter}</span>
                             </div>
                         `;
-                        
+
                         const customIcon = L.divIcon({
                             className: 'custom-div-icon',
                             html: iconHtml,
@@ -900,7 +950,7 @@
                                     <p class="text-xs text-gray-500">${item.time}</p>
                                 </div>
                             `);
-                        
+
                         state.mapLayerGroup.addLayer(marker);
                     }
                 });
@@ -909,7 +959,7 @@
             switchDay: (dayNum) => {
                 const prevDay = state.activeDay;
                 const currentDay = dayNum;
-                
+
                 // Toggle state logic
                 if (prevDay === currentDay) {
                     state.activeDay = null;
@@ -928,7 +978,7 @@
                         if (isActive) wrapper.classList.add('open');
                         else wrapper.classList.remove('open');
                     }
-                    
+
                     if (btn) {
                         if (isActive) {
                             btn.classList.remove('bg-white');
@@ -984,10 +1034,10 @@
             focusItem: (lat, lng, name, index) => {
                 // Prevent map interaction if coords are missing
                 if (!lat || !lng) return;
-                
+
                 if (state.map) {
                     state.map.setView([lat, lng], 16, { animate: true, duration: 0.5 });
-                    
+
                     state.mapLayerGroup.eachLayer(layer => {
                         const popupContent = layer.getPopup()?.getContent();
                         if (popupContent && popupContent.includes(name)) {
@@ -1003,7 +1053,7 @@
             navigate: (page) => {
                 state.currentPage = page;
                 appContainer.innerHTML = ''; // Clear content
-                
+
                 // Update active state in nav (simple styling)
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     if (btn.dataset.page === page) {
@@ -1057,4 +1107,5 @@
     </script>
     <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>
